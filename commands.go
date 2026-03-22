@@ -30,7 +30,7 @@ func runInit(_ context.Context, cfg runtimeConfig, args []string) error {
 	fs.StringVar(&stateDir, "state-dir", cfg.StateDir, "Directory for generated state files")
 	fs.StringVar(&timezoneName, "timezone", cfg.Timezone, "Default timezone for Strong timestamps")
 	fs.StringVar(&weightUnit, "weight-unit", cfg.WeightUnit, "Default weight unit: lb or kg")
-	fs.StringVar(&distanceUnit, "distance-unit", cfg.DistanceUnit, "Default distance unit: mi, km, or m")
+	fs.StringVar(&distanceUnit, "distance-unit", initDistanceUnitDefault(cfg), "Default distance unit: mi, km, or m")
 	fs.StringVar(&visibility, "visibility", cfg.DefaultVisibility, "Default workout visibility: private or public")
 	if err := fs.Parse(args); err != nil {
 		if errors.Is(err, flag.ErrHelp) {

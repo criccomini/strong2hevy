@@ -197,6 +197,13 @@ func writeConfigFile(path string, cfg runtimeConfig, force bool) error {
 	return writeFileAtomic(path, data)
 }
 
+func initDistanceUnitDefault(cfg runtimeConfig) string {
+	if strings.TrimSpace(cfg.DistanceUnit) != "" {
+		return cfg.DistanceUnit
+	}
+	return "mi"
+}
+
 func (cfg runtimeConfig) exerciseMapPath() string {
 	return filepath.Join(cfg.StateDir, filepath.Base(defaultExerciseMapPath))
 }

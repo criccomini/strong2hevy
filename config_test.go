@@ -45,3 +45,17 @@ func TestWriteConfigFileClearsAPIKey(t *testing.T) {
 		t.Fatalf("config file did not include expected distance unit: %s", text)
 	}
 }
+
+func TestInitDistanceUnitDefault(t *testing.T) {
+	t.Parallel()
+
+	if got := initDistanceUnitDefault(defaultRuntimeConfig()); got != "mi" {
+		t.Fatalf("initDistanceUnitDefault(defaultRuntimeConfig()) = %q, want mi", got)
+	}
+
+	cfg := defaultRuntimeConfig()
+	cfg.DistanceUnit = "km"
+	if got := initDistanceUnitDefault(cfg); got != "km" {
+		t.Fatalf("initDistanceUnitDefault(cfg) = %q, want km", got)
+	}
+}
