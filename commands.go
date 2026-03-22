@@ -227,13 +227,15 @@ func runAnalyze(_ context.Context, cfg runtimeConfig, args []string) error {
 
 func runExercises(ctx context.Context, cfg runtimeConfig, args []string) error {
 	if len(args) == 0 {
-		return fmt.Errorf("expected subcommand: search or resolve")
+		return fmt.Errorf("expected subcommand: search, resolve, or review")
 	}
 	switch args[0] {
 	case "search":
 		return runExercisesSearch(ctx, cfg, args[1:])
 	case "resolve":
 		return runExercisesResolve(ctx, cfg, args[1:])
+	case "review":
+		return runExercisesReview(ctx, cfg, args[1:])
 	default:
 		return fmt.Errorf("unknown exercises subcommand %q", args[0])
 	}

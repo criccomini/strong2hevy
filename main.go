@@ -94,6 +94,7 @@ func printRootUsage(w io.Writer) {
 		"  analyze                     Summarize the Strong CSV",
 		"  exercises search <query>    Search Hevy exercise templates",
 		"  exercises resolve           Build or update exercise mapping file",
+		"  exercises review            Interactively review unresolved exercise mappings",
 		"  routines plan               Build routine candidates from repeated workouts",
 		"  routines apply              Create or update Hevy routines",
 		"  workouts import            Import completed workouts into Hevy",

@@ -67,7 +67,7 @@ Example:
 ./strong2hevy init
 ./strong2hevy doctor
 ./strong2hevy exercises resolve
-$EDITOR .strong2hevy/exercise-map.yaml
+./strong2hevy exercises review
 ./strong2hevy routines plan
 $EDITOR .strong2hevy/routines.yaml
 ./strong2hevy workouts import --dry-run
@@ -246,6 +246,30 @@ Important:
 - `create-custom` only works when `custom.title`, `custom.exercise_type`, `custom.equipment_category`, and `custom.muscle_group` are filled in.
 - If `needs_review: true` is still present, imports fail rather than guessing.
 
+### `exercises review`
+
+Walks unresolved exercise mappings interactively and saves the YAML after each decision.
+
+Supported actions during review:
+
+- enter a number to choose one of the shown suggestions
+- enter `/query` to search the Hevy template catalog and replace the suggestion list
+- enter `id <template_id>` to choose a template directly
+- enter `s` to mark the exercise as `skip`
+- enter `c` to create a custom exercise mapping
+- enter `n` or an empty line to leave the entry unresolved for now
+- enter `q` to quit and keep the progress already saved
+
+Examples:
+
+```bash
+./strong2hevy exercises review
+./strong2hevy exercises review --refresh
+./strong2hevy exercises review --map ./custom-map.yaml
+```
+
+If a cached or fetched Hevy template catalog is available, review can search beyond the initial suggestions. If no template catalog is available, review still lets you pick existing suggestions, skip entries, or create custom exercises.
+
 ### `routines plan`
 
 Builds `.strong2hevy/routines.yaml` from repeated Strong workout names.
@@ -369,7 +393,7 @@ What they are for:
 ./strong2hevy doctor
 ./strong2hevy analyze
 ./strong2hevy exercises resolve
-$EDITOR .strong2hevy/exercise-map.yaml
+./strong2hevy exercises review
 ./strong2hevy workouts import --dry-run
 ./strong2hevy workouts import
 ```
