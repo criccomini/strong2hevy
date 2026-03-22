@@ -109,8 +109,8 @@ type templateCacheFile struct {
 	Templates []hevyExerciseRef `json:"templates"`
 }
 
-func loadRuntimeConfig(globals globalOptions) (runtimeConfig, error) {
-	cfg := runtimeConfig{
+func defaultRuntimeConfig() runtimeConfig {
+	return runtimeConfig{
 		InputPath:         filepath.Clean("data/strong_workouts.csv"),
 		ConfigPath:        defaultConfigPath,
 		Format:            "table",
@@ -120,6 +120,10 @@ func loadRuntimeConfig(globals globalOptions) (runtimeConfig, error) {
 		DistanceUnit:      "",
 		DefaultVisibility: "private",
 	}
+}
+
+func loadRuntimeConfig(globals globalOptions) (runtimeConfig, error) {
+	cfg := defaultRuntimeConfig()
 
 	if globals.ConfigPath != "" {
 		cfg.ConfigPath = globals.ConfigPath
@@ -165,6 +169,32 @@ func mergeConfigFile(cfg *runtimeConfig, path string) error {
 		return fmt.Errorf("parse config %s: %w", path, err)
 	}
 	return nil
+}
+
+func writeConfigFile(path string, cfg runtimeConfig, force bool) error {
+	if !force {
+		if _, err := os.Stat(path); err == nil {
+			return fmt.Errorf("config file %s already exists; pass --force to overwrite", path)
+		} else if !errors.Is(err, os.ErrNotExist) {
+			return fmt.Errorf("stat config %s: %w", path, err)
+		}
+	}
+
+	toWrite := runtimeConfig{
+		InputPath:         cfg.InputPath,
+		APIKey:            "",
+		Format:            cfg.Format,
+		StateDir:          cfg.StateDir,
+		Timezone:          cfg.Timezone,
+		WeightUnit:        cfg.WeightUnit,
+		DistanceUnit:      cfg.DistanceUnit,
+		DefaultVisibility: cfg.DefaultVisibility,
+	}
+	data, err := yaml.Marshal(toWrite)
+	if err != nil {
+		return fmt.Errorf("marshal config: %w", err)
+	}
+	return writeFileAtomic(path, data)
 }
 
 func (cfg runtimeConfig) exerciseMapPath() string {

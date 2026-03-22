@@ -64,6 +64,7 @@ export HEVY_API_KEY=<your-key>
 Example:
 
 ```bash
+./strong2hevy init
 ./strong2hevy doctor
 ./strong2hevy exercises resolve
 $EDITOR .strong2hevy/exercise-map.yaml
@@ -115,6 +116,32 @@ Config fields:
 If your Strong export contains distance-based rows and `distance_unit` is not set, `doctor` warns and `workouts import` fails fast.
 
 ## Commands
+
+### `init`
+
+Creates `.strong2hevy/config.yaml` with safe defaults for this project.
+
+By design, `init` writes `api_key: ""` even if `HEVY_API_KEY` is set, so you do not accidentally persist your API key to disk.
+
+Examples:
+
+```bash
+./strong2hevy init
+./strong2hevy init --timezone America/Los_Angeles --distance-unit mi
+./strong2hevy --config ./my-config.yaml init
+./strong2hevy init --force
+```
+
+Flags:
+
+- `--force`: overwrite an existing config file
+- `--input <path>`: default Strong CSV path to write into config
+- `--format table|json`: default output format
+- `--state-dir <path>`: directory for generated state files
+- `--timezone <iana-name>`: default timezone for Strong timestamps
+- `--weight-unit lb|kg`: default weight unit
+- `--distance-unit mi|km|m`: default distance unit
+- `--visibility private|public`: default workout visibility
 
 ### `doctor`
 
@@ -338,6 +365,7 @@ What they are for:
 ### One-time migration
 
 ```bash
+./strong2hevy init
 ./strong2hevy doctor
 ./strong2hevy analyze
 ./strong2hevy exercises resolve

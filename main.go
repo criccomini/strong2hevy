@@ -47,6 +47,8 @@ func run(ctx context.Context, args []string) error {
 	case "help":
 		printRootUsage(os.Stdout)
 		return nil
+	case "init":
+		return runInit(ctx, cfg, rest[1:])
 	case "doctor":
 		return runDoctor(ctx, cfg, rest[1:])
 	case "analyze":
@@ -87,6 +89,7 @@ func printRootUsage(w io.Writer) {
 		"  --format <format>   Output format: table or json",
 		"",
 		"Commands:",
+		"  init                        Create .strong2hevy/config.yaml",
 		"  doctor                      Validate local config and Hevy connectivity",
 		"  analyze                     Summarize the Strong CSV",
 		"  exercises search <query>    Search Hevy exercise templates",

@@ -11,6 +11,88 @@ import (
 	"time"
 )
 
+func runInit(_ context.Context, cfg runtimeConfig, args []string) error {
+	fs := flag.NewFlagSet("init", flag.ContinueOnError)
+	fs.SetOutput(io.Discard)
+	var (
+		force        bool
+		inputPath    string
+		format       string
+		stateDir     string
+		timezoneName string
+		weightUnit   string
+		distanceUnit string
+		visibility   string
+	)
+	fs.BoolVar(&force, "force", false, "Overwrite an existing config file")
+	fs.StringVar(&inputPath, "input", cfg.InputPath, "Path to Strong CSV export")
+	fs.StringVar(&format, "format", cfg.Format, "Default output format: table or json")
+	fs.StringVar(&stateDir, "state-dir", cfg.StateDir, "Directory for generated state files")
+	fs.StringVar(&timezoneName, "timezone", cfg.Timezone, "Default timezone for Strong timestamps")
+	fs.StringVar(&weightUnit, "weight-unit", cfg.WeightUnit, "Default weight unit: lb or kg")
+	fs.StringVar(&distanceUnit, "distance-unit", cfg.DistanceUnit, "Default distance unit: mi, km, or m")
+	fs.StringVar(&visibility, "visibility", cfg.DefaultVisibility, "Default workout visibility: private or public")
+	if err := fs.Parse(args); err != nil {
+		if errors.Is(err, flag.ErrHelp) {
+			return nil
+		}
+		return err
+	}
+
+	cfg.InputPath = inputPath
+	cfg.Format = strings.ToLower(strings.TrimSpace(format))
+	cfg.StateDir = stateDir
+	cfg.Timezone = timezoneName
+	cfg.WeightUnit = strings.ToLower(strings.TrimSpace(weightUnit))
+	cfg.DistanceUnit = strings.ToLower(strings.TrimSpace(distanceUnit))
+	cfg.DefaultVisibility = strings.ToLower(strings.TrimSpace(visibility))
+	cfg.APIKey = ""
+
+	if cfg.Format != "table" && cfg.Format != "json" {
+		return fmt.Errorf("unsupported format %q", cfg.Format)
+	}
+	if cfg.WeightUnit != "lb" && cfg.WeightUnit != "kg" {
+		return fmt.Errorf("unsupported weight unit %q", cfg.WeightUnit)
+	}
+	if cfg.DistanceUnit != "" && cfg.DistanceUnit != "mi" && cfg.DistanceUnit != "km" && cfg.DistanceUnit != "m" {
+		return fmt.Errorf("unsupported distance unit %q", cfg.DistanceUnit)
+	}
+	if _, err := visibilityIsPrivate(cfg.DefaultVisibility); err != nil {
+		return err
+	}
+	if _, err := loadLocation(cfg.Timezone); err != nil {
+		return err
+	}
+	if strings.TrimSpace(cfg.StateDir) == "" {
+		return errors.New("state-dir cannot be empty")
+	}
+
+	if err := writeConfigFile(cfg.ConfigPath, cfg, force); err != nil {
+		return err
+	}
+
+	summary := struct {
+		ConfigPath string        `json:"config_path"`
+		Config     runtimeConfig `json:"config"`
+	}{
+		ConfigPath: cfg.ConfigPath,
+		Config:     cfg,
+	}
+	if cfg.Format == "json" {
+		return outputJSON(summary)
+	}
+	w := mustTableWriter()
+	fmt.Fprintf(w, "Wrote config\t%s\n", cfg.ConfigPath)
+	fmt.Fprintf(w, "Input\t%s\n", cfg.InputPath)
+	fmt.Fprintf(w, "Format\t%s\n", cfg.Format)
+	fmt.Fprintf(w, "State dir\t%s\n", cfg.StateDir)
+	fmt.Fprintf(w, "Timezone\t%s\n", cfg.Timezone)
+	fmt.Fprintf(w, "Weight unit\t%s\n", cfg.WeightUnit)
+	fmt.Fprintf(w, "Distance unit\t%s\n", cfg.DistanceUnit)
+	fmt.Fprintf(w, "Default visibility\t%s\n", cfg.DefaultVisibility)
+	return w.Flush()
+}
+
 func runDoctor(ctx context.Context, cfg runtimeConfig, args []string) error {
 	fs := flag.NewFlagSet("doctor", flag.ContinueOnError)
 	fs.SetOutput(io.Discard)
