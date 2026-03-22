@@ -209,46 +209,17 @@ func (c *hevyClient) CreateWorkout(ctx context.Context, request hevyWorkoutReque
 }
 
 func (c *hevyClient) CreateCustomExercise(ctx context.Context, request hevyCustomExerciseRequest) (string, error) {
-	var response map[string]any
-	if err := c.do(ctx, http.MethodPost, "/v1/exercise_templates", request, &response); err != nil {
+	respBody, err := c.doBytes(ctx, http.MethodPost, "/v1/exercise_templates", request)
+	if err != nil {
 		return "", err
 	}
-	id, ok := response["id"]
-	if !ok {
-		return "", fmt.Errorf("custom exercise response did not include id")
-	}
-	return fmt.Sprint(id), nil
+	return parseCustomExerciseID(respBody)
 }
 
 func (c *hevyClient) do(ctx context.Context, method, path string, requestBody any, out any) error {
-	var body io.Reader
-	if requestBody != nil {
-		data, err := json.Marshal(requestBody)
-		if err != nil {
-			return fmt.Errorf("encode request body: %w", err)
-		}
-		body = bytes.NewReader(data)
-	}
-	req, err := http.NewRequestWithContext(ctx, method, c.baseURL+path, body)
+	respBody, err := c.doBytes(ctx, method, path, requestBody)
 	if err != nil {
-		return fmt.Errorf("build request: %w", err)
-	}
-	req.Header.Set("api-key", c.apiKey)
-	if requestBody != nil {
-		req.Header.Set("Content-Type", "application/json")
-	}
-	resp, err := c.httpClient.Do(req)
-	if err != nil {
-		return fmt.Errorf("request %s %s: %w", method, path, err)
-	}
-	defer resp.Body.Close()
-
-	respBody, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return fmt.Errorf("read response: %w", err)
-	}
-	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
-		return fmt.Errorf("request %s %s failed with status %d: %s", method, path, resp.StatusCode, strings.TrimSpace(string(respBody)))
+		return err
 	}
 	if out == nil || len(respBody) == 0 {
 		return nil
@@ -257,4 +228,55 @@ func (c *hevyClient) do(ctx context.Context, method, path string, requestBody an
 		return fmt.Errorf("decode response: %w", err)
 	}
 	return nil
+}
+
+func (c *hevyClient) doBytes(ctx context.Context, method, path string, requestBody any) ([]byte, error) {
+	var body io.Reader
+	if requestBody != nil {
+		data, err := json.Marshal(requestBody)
+		if err != nil {
+			return nil, fmt.Errorf("encode request body: %w", err)
+		}
+		body = bytes.NewReader(data)
+	}
+	req, err := http.NewRequestWithContext(ctx, method, c.baseURL+path, body)
+	if err != nil {
+		return nil, fmt.Errorf("build request: %w", err)
+	}
+	req.Header.Set("api-key", c.apiKey)
+	if requestBody != nil {
+		req.Header.Set("Content-Type", "application/json")
+	}
+	resp, err := c.httpClient.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("request %s %s: %w", method, path, err)
+	}
+	defer resp.Body.Close()
+
+	respBody, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, fmt.Errorf("read response: %w", err)
+	}
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return nil, fmt.Errorf("request %s %s failed with status %d: %s", method, path, resp.StatusCode, strings.TrimSpace(string(respBody)))
+	}
+	return respBody, nil
+}
+
+func parseCustomExerciseID(respBody []byte) (string, error) {
+	trimmed := strings.TrimSpace(string(respBody))
+	if trimmed == "" {
+		return "", fmt.Errorf("custom exercise response did not include id")
+	}
+	var objectResp map[string]any
+	if err := json.Unmarshal(respBody, &objectResp); err == nil {
+		if id, ok := objectResp["id"]; ok {
+			return fmt.Sprint(id), nil
+		}
+	}
+	var stringResp string
+	if err := json.Unmarshal(respBody, &stringResp); err == nil && strings.TrimSpace(stringResp) != "" {
+		return strings.TrimSpace(stringResp), nil
+	}
+	return trimmed, nil
 }

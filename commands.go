@@ -551,6 +551,10 @@ func runRoutinesApply(ctx context.Context, cfg runtimeConfig, args []string) err
 		}
 		request, _, err := buildRoutineRequest(ctx, workout, cfg, client, &mapFile, templates, folderID, dryRun)
 		if err != nil {
+			if errors.Is(err, errNoImportableExercises) {
+				summary.Skipped++
+				continue
+			}
 			summary.Errors = append(summary.Errors, err.Error())
 			continue
 		}
@@ -701,6 +705,11 @@ func runWorkoutsImport(ctx context.Context, cfg runtimeConfig, args []string) er
 		}
 		request, skippedExercises, err := buildWorkoutRequest(ctx, workout, cfg, client, &mapFile, templates, visibility, dryRun)
 		if err != nil {
+			if errors.Is(err, errNoImportableExercises) {
+				_ = skippedExercises
+				summary.Skipped++
+				continue
+			}
 			summary.Errors = append(summary.Errors, err.Error())
 			continue
 		}

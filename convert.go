@@ -2,11 +2,14 @@ package main
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"slices"
 	"strings"
 	"time"
 )
+
+var errNoImportableExercises = errors.New("no importable exercises after mapping")
 
 func exerciseMapPointers(file *exerciseMapFile) map[string]*exerciseMapping {
 	out := make(map[string]*exerciseMapping, len(file.Exercises))
@@ -97,7 +100,7 @@ func buildWorkoutRequest(
 		return hevyWorkoutRequest{}, nil, err
 	}
 	if len(exercises) == 0 {
-		return hevyWorkoutRequest{}, skipped, fmt.Errorf("workout %q on %s has no importable exercises", workout.WorkoutName, workout.StartRaw)
+		return hevyWorkoutRequest{}, skipped, fmt.Errorf("%w: workout %q on %s", errNoImportableExercises, workout.WorkoutName, workout.StartRaw)
 	}
 	duration, err := parseStrongDuration(workout.DurationRaw)
 	if err != nil {
@@ -131,7 +134,7 @@ func buildRoutineRequest(
 		return hevyRoutineRequest{}, nil, err
 	}
 	if len(exercises) == 0 {
-		return hevyRoutineRequest{}, skipped, fmt.Errorf("routine %q has no importable exercises", workout.WorkoutName)
+		return hevyRoutineRequest{}, skipped, fmt.Errorf("%w: routine %q", errNoImportableExercises, workout.WorkoutName)
 	}
 	return hevyRoutineRequest{
 		Routine: hevyRoutineBody{

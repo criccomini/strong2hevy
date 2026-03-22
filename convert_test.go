@@ -1,6 +1,11 @@
 package main
 
-import "testing"
+import (
+	"context"
+	"errors"
+	"testing"
+	"time"
+)
 
 func TestConvertSet(t *testing.T) {
 	t.Parallel()
@@ -49,5 +54,38 @@ func TestChooseExactTemplatePrefersNonCustom(t *testing.T) {
 	}
 	if got.ID != "builtin-1" {
 		t.Fatalf("chooseExactTemplate returned %q, want builtin-1", got.ID)
+	}
+}
+
+func TestBuildWorkoutRequestReturnsSentinelForAllSkippedExercises(t *testing.T) {
+	t.Parallel()
+
+	workout := strongWorkout{
+		Start:       time.Date(2024, 1, 1, 10, 0, 0, 0, time.UTC),
+		StartRaw:    "2024-01-01 10:00:00",
+		WorkoutName: "Skipped Workout",
+		DurationRaw: "30m",
+		ExerciseList: []strongExercise{
+			{Name: "Unknown Exercise", Sets: []strongSet{{SetOrder: "1"}}},
+		},
+	}
+	mapFile := exerciseMapFile{
+		Exercises: []exerciseMapping{
+			{StrongName: "Unknown Exercise", Action: "skip"},
+		},
+	}
+
+	_, _, err := buildWorkoutRequest(
+		context.Background(),
+		workout,
+		runtimeConfig{WeightUnit: "lb"},
+		nil,
+		&mapFile,
+		nil,
+		"private",
+		true,
+	)
+	if !errors.Is(err, errNoImportableExercises) {
+		t.Fatalf("buildWorkoutRequest error = %v, want errNoImportableExercises", err)
 	}
 }
