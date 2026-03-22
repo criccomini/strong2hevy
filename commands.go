@@ -627,15 +627,16 @@ func runWorkoutsImport(ctx context.Context, cfg runtimeConfig, args []string) er
 	fs := flag.NewFlagSet("workouts import", flag.ContinueOnError)
 	fs.SetOutput(io.Discard)
 	var (
-		fromDate     string
-		toDate       string
-		mapPath      string
-		statePath    string
-		visibility   string
-		timezoneName string
-		distanceUnit string
-		dryRun       bool
-		refresh      bool
+		fromDate        string
+		toDate          string
+		mapPath         string
+		statePath       string
+		visibility      string
+		timezoneName    string
+		distanceUnit    string
+		dryRun          bool
+		refresh         bool
+		continueOnError bool
 	)
 	fs.StringVar(&fromDate, "from", "", "Import workouts on or after YYYY-MM-DD")
 	fs.StringVar(&toDate, "to", "", "Import workouts on or before YYYY-MM-DD")
@@ -646,6 +647,7 @@ func runWorkoutsImport(ctx context.Context, cfg runtimeConfig, args []string) er
 	fs.StringVar(&distanceUnit, "distance-unit", cfg.DistanceUnit, "Distance unit for Strong distances: mi, km, or m")
 	fs.BoolVar(&dryRun, "dry-run", false, "Build requests without sending them")
 	fs.BoolVar(&refresh, "refresh", false, "Refresh cached exercise templates")
+	fs.BoolVar(&continueOnError, "continue-on-error", false, "Keep importing after errors instead of failing fast")
 	if err := fs.Parse(args); err != nil {
 		return err
 	}
@@ -711,6 +713,9 @@ func runWorkoutsImport(ctx context.Context, cfg runtimeConfig, args []string) er
 				continue
 			}
 			summary.Errors = append(summary.Errors, err.Error())
+			if !continueOnError {
+				break
+			}
 			continue
 		}
 		if dryRun {
@@ -721,6 +726,9 @@ func runWorkoutsImport(ctx context.Context, cfg runtimeConfig, args []string) er
 		response, err := client.CreateWorkout(ctx, request)
 		if err != nil {
 			summary.Errors = append(summary.Errors, err.Error())
+			if !continueOnError {
+				break
+			}
 			continue
 		}
 		state.Workouts[workout.Hash] = importStateEntry{

@@ -337,6 +337,7 @@ Examples:
 ```bash
 ./strong2hevy workouts import --dry-run
 ./strong2hevy workouts import
+./strong2hevy workouts import --continue-on-error
 ./strong2hevy workouts import --from 2024-01-01 --to 2024-12-31
 ./strong2hevy workouts import --visibility public
 ./strong2hevy workouts import --timezone America/Los_Angeles --distance-unit mi
@@ -353,6 +354,7 @@ Flags:
 - `--distance-unit mi|km|m`: distance unit used in the Strong CSV
 - `--dry-run`: build requests without sending them
 - `--refresh`: refresh exercise template cache
+- `--continue-on-error`: continue past errors instead of failing fast
 
 Import behavior:
 
@@ -363,6 +365,7 @@ Import behavior:
 - Workout end time is computed from `Date + Duration`.
 - Exercises with `action: skip` are omitted from the workout.
 - Imported workouts are tracked in the local import state file.
+- By default, import stops on the first real error. Use `--continue-on-error` to keep going and collect all errors.
 
 ## Generated Files
 
