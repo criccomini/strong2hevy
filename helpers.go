@@ -310,7 +310,8 @@ func visibilityIsPrivate(value string) (bool, error) {
 }
 
 func parseFolderArg(ctx context.Context, client *hevyClient, value string) (*int, error) {
-	if strings.TrimSpace(value) == "" {
+	value = strings.TrimSpace(value)
+	if value == "" {
 		return nil, nil
 	}
 	if id, err := strconv.Atoi(value); err == nil {
@@ -326,5 +327,23 @@ func parseFolderArg(ctx context.Context, client *hevyClient, value string) (*int
 			return &id, nil
 		}
 	}
-	return nil, fmt.Errorf("routine folder %q not found", value)
+	created, err := client.CreateRoutineFolder(ctx, value)
+	if err != nil {
+		return nil, fmt.Errorf("create routine folder %q: %w", value, err)
+	}
+	if created.ID > 0 {
+		id := created.ID
+		return &id, nil
+	}
+	folders, err = client.ListRoutineFolders(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("lookup routine folder %q after create: %w", value, err)
+	}
+	for _, folder := range folders {
+		if strings.EqualFold(folder.Title, value) {
+			id := folder.ID
+			return &id, nil
+		}
+	}
+	return nil, fmt.Errorf("created routine folder %q but could not determine its id", value)
 }

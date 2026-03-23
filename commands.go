@@ -489,7 +489,7 @@ func runRoutinesApply(ctx context.Context, cfg runtimeConfig, args []string) err
 	)
 	fs.StringVar(&planPath, "plan", cfg.routinePlanPath(), "Path to routine plan file")
 	fs.StringVar(&mapPath, "map", cfg.exerciseMapPath(), "Path to exercise map file")
-	fs.StringVar(&folderArg, "folder", "", "Routine folder name or id")
+	fs.StringVar(&folderArg, "folder", "", "Routine folder name or id (creates named folder if missing)")
 	fs.BoolVar(&updateExisting, "update-existing", false, "Update existing routines matched by exact title")
 	fs.BoolVar(&dryRun, "dry-run", false, "Build requests without sending them")
 	fs.BoolVar(&refresh, "refresh", false, "Refresh cached exercise templates")

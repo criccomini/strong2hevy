@@ -323,7 +323,7 @@ Flags:
 
 - `--plan <path>`: routine plan file
 - `--map <path>`: exercise map file
-- `--folder <name|id>`: optional Hevy routine folder
+- `--folder <name|id>`: optional Hevy routine folder; named folders are created automatically if missing
 - `--update-existing`: update an existing Hevy routine matched by exact title
 - `--dry-run`: build requests without sending them
 - `--refresh`: refresh exercise template cache

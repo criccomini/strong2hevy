@@ -41,6 +41,14 @@ type hevyRoutineFolder struct {
 	Title string `json:"title"`
 }
 
+type hevyRoutineFolderRequest struct {
+	RoutineFolder hevyRoutineFolderBody `json:"routine_folder"`
+}
+
+type hevyRoutineFolderBody struct {
+	Title string `json:"title"`
+}
+
 type hevyRoutineSummary struct {
 	ID    string `json:"id"`
 	Title string `json:"title"`
@@ -192,6 +200,18 @@ func (c *hevyClient) ListRoutineFolders(ctx context.Context) ([]hevyRoutineFolde
 		page++
 	}
 	return out, nil
+}
+
+func (c *hevyClient) CreateRoutineFolder(ctx context.Context, title string) (hevyRoutineFolder, error) {
+	var response hevyRoutineFolder
+	if err := c.do(ctx, http.MethodPost, "/v1/routine_folders", hevyRoutineFolderRequest{
+		RoutineFolder: hevyRoutineFolderBody{
+			Title: title,
+		},
+	}, &response); err != nil {
+		return hevyRoutineFolder{}, err
+	}
+	return response, nil
 }
 
 func (c *hevyClient) CreateRoutine(ctx context.Context, request hevyRoutineRequest) (map[string]any, error) {
