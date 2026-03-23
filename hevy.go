@@ -65,7 +65,17 @@ type hevyRoutineRequest struct {
 
 type hevyRoutineBody struct {
 	Title     string                `json:"title"`
-	FolderID  *int                  `json:"folder_id,omitempty"`
+	FolderID  *int                  `json:"folder_id"`
+	Notes     string                `json:"notes,omitempty"`
+	Exercises []hevyExercisePayload `json:"exercises"`
+}
+
+type hevyRoutineUpdateRequest struct {
+	Routine hevyRoutineUpdateBody `json:"routine"`
+}
+
+type hevyRoutineUpdateBody struct {
+	Title     string                `json:"title"`
 	Notes     string                `json:"notes,omitempty"`
 	Exercises []hevyExercisePayload `json:"exercises"`
 }
@@ -194,7 +204,7 @@ func (c *hevyClient) CreateRoutine(ctx context.Context, request hevyRoutineReque
 
 func (c *hevyClient) UpdateRoutine(ctx context.Context, routineID string, request hevyRoutineRequest) (map[string]any, error) {
 	var response map[string]any
-	if err := c.do(ctx, http.MethodPut, "/v1/routines/"+url.PathEscape(routineID), request, &response); err != nil {
+	if err := c.do(ctx, http.MethodPut, "/v1/routines/"+url.PathEscape(routineID), toUpdateRoutineRequest(request), &response); err != nil {
 		return nil, err
 	}
 	return response, nil
@@ -206,6 +216,16 @@ func (c *hevyClient) CreateWorkout(ctx context.Context, request hevyWorkoutReque
 		return nil, err
 	}
 	return response, nil
+}
+
+func toUpdateRoutineRequest(request hevyRoutineRequest) hevyRoutineUpdateRequest {
+	return hevyRoutineUpdateRequest{
+		Routine: hevyRoutineUpdateBody{
+			Title:     request.Routine.Title,
+			Notes:     request.Routine.Notes,
+			Exercises: request.Routine.Exercises,
+		},
+	}
 }
 
 func (c *hevyClient) CreateCustomExercise(ctx context.Context, request hevyCustomExerciseRequest) (string, error) {
